@@ -1,0 +1,321 @@
+% Main proposal text.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set a class and general configuration
+\documentclass[onecolumn,a4paper,11pt]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Set variables with the title, authors, etc.
+% Edit the values and they will propagate to the document and head/foot
+
+% Common variables for other documents defined in information.tex
+\include{information.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Import the required packages
+\usepackage[utf8]{inputenc}
+\usepackage[TU]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{siunitx}
+\usepackage{xcolor}
+% improved urls with proper hyphenation
+\usepackage{xurl}
+% Tweak the look of captions
+\usepackage{caption}
+% To control the style of section titles
+\usepackage{titlesec}
+% Import natbib and doi packages
+\usepackage[round,authoryear,sort]{natbib}
+% show dois as links on references
+\usepackage{doi}
+% Remove extra space between references
+\usepackage{natbibspacing}
+% Use a different font
+\usepackage[scaled=0.9,sfdefault]{notomath}
+% Control the font size
+\usepackage{anyfontsize}
+\usepackage{setspace}
+% To get the number of pages in the document
+\usepackage{lastpage}
+\usepackage{lipsum}
+\usepackage{ragged2e}
+\usepackage{mdframed}
+% To define custom environments
+\usepackage{environ}
+% To control hyphenation for individual blocks of text
+\usepackage{hyphenat}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Configuration of the document
+\geometry{%
+  left=30mm,
+  right=15mm,
+  top=15mm,
+  bottom=15mm,
+  headsep=0mm,
+  headheight=0mm,
+  footskip=7mm,
+  includehead=true,
+  includefoot=true
+}
+
+% Control line and table row spacing
+\onehalfspacing
+\renewcommand{\arraystretch}{1.5}
+
+% Set the spacing between bibliography entries (requires natbib)
+\setlength{\bibsep}{0pt}
+
+% Custom colors
+\definecolor{darkgray}{gray}{0.4}
+\definecolor{mediumgray}{gray}{0.5}
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{mediumblue}{HTML}{2060c2}
+\definecolor{lightblue}{HTML}{f7faff}
+
+% Configure captions
+\captionsetup[table]{position=below,skip=0pt}
+\captionsetup{labelfont=bf,font={small,color=darkgray},skip=10pt}
+
+% Make urls use the same font as every other text
+\urlstyle{same}
+
+% Configure hyperref and add PDF metadata
+\hypersetup{
+    colorlinks,
+    allcolors=mediumblue,
+    pdftitle={\Title},
+    pdfauthor={\PIname},
+    breaklinks=true,
+}
+
+% Configure header and footer
+% Inspired by LaPreprint: https://github.com/roaldarbol/LaPreprint
+\newcommand{\Separator}{\hspace{3pt}|\hspace{3pt}}
+\newcommand{\FooterFont}{\footnotesize\color{mediumgray}}
+\pagestyle{fancy}
+\fancyhf{}
+\lfoot{%
+  \FooterFont{}
+  \TeamShort{} (\Year)
+  \Separator{}
+  \TitleShort
+}
+\rfoot{%
+  \FooterFont{}
+  \FundingCall{}
+  \Separator{}
+  \thepage\space of\space \pageref*{LastPage}
+}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{1pt}
+\preto{\footrule}{\color{lightgray}}
+\fancypagestyle{plain}{%
+  \fancyhf{}
+  \lfoot{}
+  \rfoot{}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+% Define fancy text boxes
+\NewEnviron{summarybox}{%
+  \mdfdefinestyle{summarybox_}{%
+    leftline=true,
+    rightline=false,
+    topline=false,
+    bottomline=false,
+    linewidth=2pt,
+    linecolor=mediumblue,
+    backgroundcolor=lightblue,
+    innertopmargin=12pt,
+    innerbottommargin=12pt,
+    innerleftmargin=12pt,
+    innerrightmargin=12pt,
+    skipbelow=5pt,
+    skipabove=5pt,
+  }
+  \newmdenv[style=summarybox_]{summarybox_}
+  \begin{summarybox_}
+    \footnotesize
+    \BODY
+  \end{summarybox_}
+}
+
+
+
+\begin{document}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title page
+\begin{FlushLeft}
+  \begin{spacing}{2}
+    {\Huge \textbf{\Title}}
+  \end{spacing}
+  \vspace{0.1cm}
+  \textbf{Orientador:} \PIname
+  \\[0.1cm]
+  \textbf{Unidade:} \Institution
+\end{FlushLeft}
+
+{\color{mediumblue}\hrule height 1pt}
+
+\section*{Resumo}
+
+Medições de distúrbios do campo de gravidade fornecem informações importantes
+sobre as camadas mais externas da Terra. Com o advento de missões de satélite,
+temos cobertura global e homogênea desses dados. Porém, analisar os dados em
+escala continental ou global é inviável devida a dificuldade dos métodos
+quantitativos de interpretação. A análise de regressão entre os dados de
+gravidade e dados da topografia terrestre tem o potencial de fornecer uma
+análise quantitativa rápida para estudos tectônicos em escala continental.
+Neste trabalho, iremos aprimorar o método da regressão e explorar o uso de
+aprendizagem de máquinas para extrair padrões dos resultados obtidos.
+
+
+\section{Justificativa}
+
+Técnicas modernas de medição da aceleração da gravidade presentes em satélites como GOCE (2009--2013), GRACE (2002--2017) e GRACE-FO (2018--presente) nos permitem mapear pequenos distúrbios no campo de gravidade da Terra com alta precisão e cobertura global.
+Estes distúrbios estão relacionados a anomalias de densidade no interior da Terra, predominantemente na litosfera, a camada mais externa da Terra que é formada pela crosta e parte do manto superior.
+
+O acesso aos dados produzidos por estas missões de satélite foi facilitado pelo advento do \href{https://icgem.gfz-potsdam.de/home}{International Centre for Global Earth Models (ICGEM)}, um serviço proporcionado à comunidade pelo Helmholtz Centre Potsdam -- GFZ German Research Centre e coordenado pela International Association of Geodesy \citep{Ince2019}. O centro coleta dados de gravidade na forma de coeficientes de modelos de harmônicos esféricos produzidos por grupos de pesquisa do mundo todo e os disponibiliza de maneia ordenada e sob uma licença aberta. Além disso, é possível também acessar os dados no formato de malhas regulares que são calculadas para os usuários sob demanda. O advento de dados de satélite e do ICGEM tornaram realidade o acesso gratuito a dados de gravidade de alta resolução com cobertura global.
+
+No entanto, a interpretação de dados de gravidade para inferir propriedades da litosfera ainda é trabalhosa. Modelar os distúrbios observados em função das anomalias de densidade que os causam é um problema inverso mal-posto, ou seja, uma solução pode não existir, não ser única e ser instável \citep{Silva2001}. Tal modelagem pode ser feita de maneira manual por intérpretes altamente proficientes nas nuances dos dados e do contexto geológico da região em estudo. Alternativamente, podem ser empregados métodos automáticos, chamados de métodos de ``inversão'', que produzem distribuições de densidade que melhor ajustam os dados observados. Porém, operar um método de inversão corretamente também requer conhecimento profundo das nuances do método e do contexto geológico \citep{Silva2001}. Esses fatores tornam inviáveis estudos em escala global ou continental de modelagem de dados de gravidade. Tais estudos tendem a se concentrar na análise qualitativa dos dados.
+
+\citet{Braitenberg2015} introduziu um dos poucos métodos quantitativos e rápidos para interpretação de dados de gravidade em escala continental a global. O método se baseia na relação linear entre o distúrbio da gravidade corrigido de efeitos topográficos, chamado aqui de ``distúrbio Bouguer'', e a topografia filtrada para remover curtos comprimentos de onda. Essa relação surge da compensação isostática das massas topográficas a longos comprimentos de onda. O coeficiente angular é proporcional à densidade da crosta e é diferente para crosta continental e crosta oceânica. \citet{Braitenberg2015} realiza uma regressão linear entre os dados de gravidade e uma ``topografia equivalente'', que corrige o efeito da variação de densidade entre continente e oceano para produzir uma relação linear com coeficiente angular uniforme. Quando realizado em janelas, o método é capaz de produzir mapas dos coeficientes angular e linear que demonstram correlação com estruturas tectônicas conhecidas. Além disso, \citet{Pivetta2020} demonstram que a análise de regressão independe do mecanismo de compensação isostática (Airy-Heiskanen ou Pratt-Hayford) e é um dos poucos métodos capazes de fornecer informações novas em áreas nas quais a geologia não é bem definida, como as regiões polares e outros planetas rochosos. Até o presente, este método foi pouco explorado na literatura, tanto do ponto de vista teórico quando prático.
+
+Neste trabalho, propomos melhorias ao método de \citet{Braitenberg2015} e \citet{Pivetta2020}. Além disso, adicionaremos o método proposto ao software livre \href{https://www.fatiando.org/harmonica}{Harmonica} \citep{Harmonica} para que seja facilmente utilizado pela comunidade geofísica, ampliando sua adoção.
+
+\section{Objetivos}
+
+\begin{enumerate}
+    \item Democratizar o acesso ao método de interpretação de dados de gravidade via análise de regressão.
+    \item Remover a necessidade do uso da ``topografia equivalente'' através da regressão dupla com dois coeficientes angulares distintos.
+    \item Melhorar a qualidade da regressão em regiões com expressas anomalias de densidade na crosta através de um ajuste robusto.
+    \item Explorar o uso de outros parâmetros da regressão, como o coeficiente de determinação R\textsuperscript{2}, e de técnicas de aprendizagem de máquinas não-supervisionadas para a interpretação dos resultados.
+    \item Analisar as vantagens e limitações do método através de testes em dados sintéticos realísticos utilizando o modelo CRUST1.0 \citep{Laske2013}.
+\end{enumerate}
+
+\section{Métodos}
+
+Em um regime de equilíbrio isostático, é possível demonstrar que a relação entre o distúrbio Bouguer, que é o distúrbio da gravidade menos o efeito gravitacional da topografia, e a topografia é linear. Nos continentes, essa relação é
+
+\begin{equation}
+    \delta g_{bg} = -2 \pi G \rho_c h,
+    \label{eq:bg-cont}
+\end{equation}
+
+\noindent
+na qual $\delta g_{bg}$ é o distúrbio Bouguer, $G$ é a constante gravitacional, $h$
+é a altitude ortométrica e $\rho_c$ é a densidade da crosta continental. Nos oceanos, temos
+
+\begin{equation}
+    \delta g_{bg} = -2 \pi G (\rho_{c} - \rho_a) h,
+    \label{eq:bg-oce}
+\end{equation}
+
+\noindent
+na qual $\rho_a$ é a densidade da água.
+
+Para a análise de regressão, \citet{Braitenberg2015} calcula a topografia equivalente
+
+\begin{equation}
+    h_e = \begin{cases}
+        h, & \text{se } h \geq 0
+        \\
+        h \dfrac{\rho_c - \rho_a}{\rho_c}, & \text{se } h < 0
+    \end{cases}
+\end{equation}
+
+\noindent
+e realizam a regressão para identificar um único coeficiente angular e um coeficiente linear. O cálculo da topografia equivalente requer conhecimento da densidade da crosta $\rho_c$, que geralmente é um dos parâmetros que buscamos determinar através da análise de regressão.
+
+Aqui, utilizaremos um único modelo linear para evitar o uso da topografia equivalente. Nosso modelo é dado pela combinação das Equações~\ref{eq:bg-cont} e \ref{eq:bg-oce}
+
+\begin{equation}
+    \delta g_{bg} =
+    - \dfrac{\text{sgn}\ h + 1}{2} 2 \pi G \rho_c h
+    - \dfrac{1 - \text{sgn}\ h}{2} 2 \pi G (\rho_{c} - \rho_a) h
+    + c\ ,
+    \label{eq:modelo}
+\end{equation}
+
+\noindent
+na qual $\text{sgn}\ h$ é a função sinal e $c$ é um coeficiente linear.
+Determinaremos os dois coeficientes angulares e o coeficiente linear a partir dos dados através de uma regressão robusta. Em janelas de dados que são puramente oceânicas ou continentais, estimaremos somente um coeficiente angular. Já em áreas de transição, estimaremos dois coeficientes, um para cada domínio. Isso elimina a necessidade da topografia equivalente.
+
+Uma vez que os coeficientes forem estimados, calcularemos o coeficiente de determinação R\textsuperscript{2} do ajuste do modelo aos dados de cada janela. Assim, ao final do processo, teremos um ou dois coeficientes angulares, um coeficiente linear, e o R\textsuperscript{2} para cada janela. Com essas variáveis, é possível fazer uma análise de aprendizagem de máquinas não-supervisionada, como o K-Means clustering, para determinar padrões e correlações entre essas quandidades. Podemos utilizar outras métricas como o desvio padrão dos resíduos e a covariância dos parâmetros estimados para realçar a análise. \citet{Pivetta2020} obteve resultados promissores com tal análise utilizando somente o coeficiente angular e linear.
+
+\section{Atividades a serem desenvolvidas}
+
+\begin{enumerate}
+    \item Estudar os trabalhos fundamentais deste estudo, principalmente \citet{Braitenberg2015} e \citet{Pivetta2020}.
+    \item Implementar a regressão com dois coeficientes angulares em linguagem Python.
+    \item Gerar dados sintéticos de gravidades utilizando o modelo de CRUST1.0 \citep{Laske2013}.
+    \item Aplicar o método desenvolvido aos dados sintéticos.
+    \item Implementar a análise de \textit{clustering} aos resultados obtidos com os dados sintéticos.
+    \item Aplicar o método a dados reais da América do Sul, África e Antártica.
+    \item Adicionar o código desenvolvido ao projeto Harmonica \citep{Harmonica}.
+\end{enumerate}
+
+\section{Pré-requisitos para seleção de estudantes}
+
+\begin{itemize}
+    \item Proficiência na linguagem Python.
+    \item Proficiência na língua inglesa.
+    \item Conhecimento básico de geologia.
+    \item Conhecimento de cálculo diferencial nível básico.
+    \item Conhecimento de vetores e geometria analítica ou álgebra linear.
+\end{itemize}
+
+\section{Resultados previstos e indicadores de avaliação}
+
+Se bem sucedido, este projeto fornecerá uma nova e poderosa ferramente ao arsenal geofísico para a interpretação quantitativa de dados de gravidade. Esta ferramente poderá proporcionar informações novas sobre grandes estruturas tectônicas em ambientes remotos, como a Antártica e os oceanos.
+
+Esperamos que o presente projeto resulte em material para apresentação em congressos científicos e uma eventual publicação em periódico da área.
+Os resultados obtidos e a ferramenta desenvolvida serão apresentados no SIICUSP  e Simpósio Brasileiro de Geofísica de 2026.
+
+\section{Conclusão}
+
+Dados de gravidade são fundamentais para nosso entendimento da litosfera
+terrestre. Porém, ainda há existe a necessidade de métodos quantitativos de
+análise dos dados que sejam menos laboriosos que métodos de inversão ou
+modelagem de 3D. O método da regressão tem o potencial de fornecer uma análise
+quantitativa rápida para estudos tectônicos. Neste trabalho, iremos aprimorar
+o método da regressão e explorar o uso de aprendizagem de máquinas para extrair
+padrões dos resultados obtidos.
+
+\section{Cronograma de execução}
+
+\noindent
+\textbf{Meses 1: Familiarização com a literatura.}
+Nesta primeira etapa, o/a estudante estudará a literatura existente sobre
+os métodos utilizados.
+
+\noindent
+\textbf{Meses 2-5: Implementação do método de regressão.}
+Em seguida, será implementado o método de regressão com dois coeficientes angulares utilizando uma regressão robusta. A implementação será feita em linguagem Python utilizando as diversas ferramentas existentes para geofísica nessa linguagem.
+
+\noindent
+\textbf{Meses 6-8: Teste com dados sintéticos.}
+Nesta etapa, o/a estudante realizará testes com dados sintéticos gerados a partir do modelo CRUST 1.0 \citep{Laske2013}. Os testes nos informarão quais partes do modelo funcionam bem e quais parâmetros não contribuiem para a análise de clustering.
+
+\noindent
+\textbf{Meses 9-12: Aplicação a dados reais.}
+Na etapa final, aplicaremos o método desenvolvido a dados reais obtidos do ICGEM \citep{Ince2019}. Aplicaremos primeiramente a dados do Atlântico Sul para comparar nossos resultados aos de \citet{Pivetta2020}. Em seguida, aplicaremos o método a dados da Antártica em colaboração com a Profa. Renata Constantino do IAG.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Bibliography
+\bibliographystyle{apalike-doi}
+\bibliography{references}
+
+\end{document}
+%------------------------------------------------------------------------------
