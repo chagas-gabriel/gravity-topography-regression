@@ -1,0 +1,530 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{float}
+
+\title{gravity-topography-regression}
+\author{Gabriel  Aparecido das Chagas Silva}
+\date{October 2025}
+
+
+
+
+\begin{document}
+
+\maketitle
+
+
+
+\section{Proposal, article}
+
+
+
+\textbf{Topografia equivalente}: 'Gambiarra' que Braitenberg criou para resolver o problema da diferença de densidades, gerando duas equações lineares cada uma para um ambiente. Ela criou uma variável $h_e$ que corrige o efeito de variação de densidade entre continente e oceano. No entanto, para essa correção, eu preciso do valor da densidade continental $\rho_c$, que eu não sei e quero descobrir, tornando isso em um problema circular.\\ 
+
+
+\textbf{Regressão dupla}: Em vez de fazer com que os dados oceânicos e continentais sejam ajustados em uma só reta, assumo que eles são dois modelos diferentes e modela isso diretamente, por meio de um modelo matemático que já inclui essas possibilidades. \\
+
+
+
+\textbf{Regressão robusta}: Parametrizar a regressão não dependendo apenas do método convencional do MMQ, onde um ponto distoante pode deslocar a reta ajustada. Isso é necessário para uma solução mais estável para obtenção dos coeficentes angulares. \\
+
+\vspace{1cm}
+
+\textbf{\Large{Correções gravimétricas:}}
+
+\begin{itemize}
+    
+\item \textbf{Free-air-correction (CAL)}: Numa medidade de grav, sabe-se que a gravidade decai com o quadrado da distância. No caso da Terra, a medida que nos afastamos ou aproximamos do centro do planeta, por exemplo por variações de altitude, o valor da anomalia pode aumentar ou diminuir. A anomalia de ar livre mede essa variação que se deve unicamente pela distância vertical. A correção ajusta essa anomalia para o caso em que ela estivesse no nível do mar. 
+
+\item \textbf{Bouguer-plate-correction (CPB)}: A Terra exerce uma força gravitacional, em forma de campo, em direção à seu centro. Esse campo é 'esférico', os vetores vem de todas as direções em forma de esfera e apontar para o centro. Da mesma forma, as rochas de uma montanha também exercem uma força em forma de campo, també, e forma 'esférica'. No entanto, como a montanha está bem acima do centro da Terra, algumas componentes vetoriais desse campo da montanha irão dicam em sentido oposto dos vetores do campo da Terra. O gravímetro no topo de uma montanha ou planalto não vai considerar essa diferença e vai medir o dado bruto apenas, o dado resultante de $g_{medido} = F_{Terra} + F_{montanha}$; e como a força da montanha vai subtrair a força da Terra, em magnitudes isso se torna $|g_{medido}| = |F_{Terra}| - |F_{montanha}|$. A correção consiste em 'devolver' essa parte perdida na subtração dos vetores que não se observa no dado bruto do gravímetro. 
+
+Calcular a atração gravitacional de uma superfície, por exemplo, montanhosa, é muito difícil devido à suas irregularidades, variações de densidade, etc. Para isso, usa-se uma aproximação com equação bem conhecida. Aproxima-se o terreno onde está o gravímetro em um disco (prefiro chamar de cilindro) com espessura/altura $h$ que é a sua altitude local, densidade constante $\rho$ e raio infinito, onde sua base inferior está no nível do mar ($h = 0$) e a superior no local de medida na montanha. Para esse disco infinito, o cálculo da atração gravitacional se dá por:
+
+\begin{equation}
+    g_{placa} = 2\pi G \rho h
+\end{equation}
+
+onde $G$ é a constante gravitacional. Considerando que $g_{observado} = g_{Terra} - g_{montanha}$, e a correção calcula justamente uma aproximação para $g_{montanha}$, podemos somar a aproximação no modelo e dados observados assim cancelar o efeito da montanha, sobrando apenas o efeito da Terra. 
+
+\begin{equation}
+    g_{corrigido} = g_{medido} + g_{placa}
+\end{equation}
+
+\begin{equation}
+    g_{corrigido} = g_{Terra} - g_{montanha} + g_{placa} = g_{Terra}
+\end{equation}
+
+A correção Bouguer consiste na adição do efeito da massa com altitude h no cálculo dos dados observados, buscando isolar o efeito gravitacional terrestre até o nível do mar. 
+
+Após as correções acima, temos a \textbf{Anomalia Bouguer Simples}. Além dessas, há mai suma correção a ser feita:
+
+    \item \textbf{Terrain correction (CT)}: A aproximação por placa infinita não é fiel À geologia real. A fim de atenuar os efeitos adversos, corrige-se o efeito gravitacional de picos e vales reais no modelo do disco infinito. Essa aproximação leva em consideração a topografia real da região ao redor da estação de medidas, analisando a atração gravitacional dos vales, que são 'faltas de massa' e picos 'excesso de massa (como picos acima da minha estação)'. Essa correção é sempre positiva. 
+
+    Para uma montanha vizinha com pico maior que a altitude da estação, haverá um vetor força  a diagonal no sentido SW-NE no caso desse exemplo. O gravímetro mede apenas a comonente vertical pra baixo (para S) das forças agindo nele, e a componente vertical desse vetor aponta para N (ou para cima, como preferir), logo a contribuição desse pico será negativa para o dado observado no meu gravímetro. Para fazer essa correção, é então necessário um fator positivo.
+
+    Para um vale, uma falta de massa, o modelo de placa preencheu todo esse espaço vazio. Como para chegar em $g_{corrigido}$ eu somo o valor da aproximação da placa infinita (3), supõe-se que há massa no lugar de um vale onda na realidade, não há massa. No entanto, estou considerando essa acresção de massa no modelo que foi usado para correção, e essa acresção de massa gera um resultado inadequado, menor que o ideal e o mais correto para a aproximação real. Para compensar esse efeito, é somado um valor para compensação. Supões-se que um dado de crosta esperado fosse 1000U. um plato sozinho exerceria contribuição de 50; no entanto, um vale (ausência de rocha) produz -10 nesse dado do plato. Logo, para um gravímetro, ele mediria a soma de todos esses efeitos: $1000 + 50 - 10 = 1040U$. No cálculo da anomalia em si, haverá uma subtração do $g_{medido}$ pelo $g_{placa}$, isso significa que se considerarmos a placa como infinita e plana, o valor dessa subtração será menor que o esperado para uma aproximação mais adequada, no caso da presença de um vale. Para compensar esse valor menor, é feito uma soma da 'contribuição' desse vale, aumentando o resultado da subtração gerando um resultado mais fidedigno. 
+
+    \end{itemize}
+
+
+    \vspace{1cm}
+
+    \textbf{\Large{Anomalia Bouguer}}
+
+    A Anomalia Bouguer é o sinal residual que não pode ser explicado pela topografia visível e pelo resultado esperado considerando a Terra lisa e homogênea, e que portanto é causada por anomalias de densidade na crosta e no manto superior. Sua equação é:
+
+    \begin{equation}
+        \delta_{g_{bg}} = g_{medido} - g_{teórico} + CAL - CPB + CT
+    \end{equation}
+
+Se a anomalia é positiva, a gravidade ali é mais forte que o esperado, podendo significar uma rocha mais densa (como uma intrusão máfica), um afinamento da crosta (que se aproxima mais do centro da Terra, aumentando a anomalia) ou o soerguimento de um embasamento cristalino. 
+
+Se a anomalia é positiva, a gravidade é mais fraca do que o esperado, podendo significar uma rocha menos densa como granito, uma bacia sedimentar, um espessamento da crosta por isostasia. 
+
+Se a anomalia é próxima à zero, a massa da topografia é compensada em profundidade e não há variações significativas de densidade ali, estando a região em equilíbrio isostático. 
+
+
+
+\section{Pivetta e Braitenberg - 2020}
+
+\subsection{Introdução}
+
+A descontinuidade de Moho não se traduz em uma esfera lisa perfeita, e ela varia de profundidade dependendo do local da Terra onde está, por conta da isostasia. Por exemplo, sob uma cadeia de montanhas, a Moho é mais espessa pois a cadeia de montanhas precisa de uma 'raiz' maior para se sustentar em cima do manto. Já na crosta oceânica, a Moho é menor pois devido à crosta ser mais fina, logo está mais próxima da superfície. As ondulações da Moho são essas subidas e descidas que ela possui devido à isostasia. 
+
+Um sinal de curto comprimento de onda varia suavemente ao longo de grandes distâncias (como uma cadeia de montanhas) e um sinal de curto comprimento de onda varia muito rapidamente em urtas distÂncias, como uma intrusão. As anomalias Bouguer são dominadas por sinais de longo comprimento de onda por conta das oscilações de Moho que são muito grandes e largas, como cordilheiras de montanhas ou um oceano. Anomalias de curto comprimento de onda são mais localizadas e únicas, e mais próximas e rasas na crosta, sendo mais 'pontuais'. 
+    
+
+\textbf{Slope, intercepto}: Coeficiente angular e coeficiente linear ($y = ax + b$). Para a regressão lienar desse trabalho: 
+
+\begin{itemize}
+    \item \textbf{y}: Anomalia Bouguer - mGal (miligal)
+    \item \textbf{x}: Topografia - m (metros)
+    \item \textbf{a}: Slope - mGal/m 
+    \item \textbf{b}: Intercepto - mGal
+\end{itemize}
+
+Sabe-se que a equação de atração de uma placa infinita é:
+
+\begin{equation}
+    \delta_{g_{bg}} = -2 \pi G \rho_c h
+\end{equation}
+
+A partir da equação acima, temos que o 'a' da regressão, o slope, é igual à $a = -2 \pi G \rho_C$. Isolando a densidade:
+
+\begin{equation}
+    \rho_c = \frac{-a}{2 \pi G}
+\end{equation}
+
+Assumindo modelo de isostasia de Airy perfeito. Isso é uma densidade aparente. \textbf{O que o método calcula, em realidade, é a relação entre a Anomalia Bouguer (que considera apenas o que está abaixo do nível do mar) com a topografia (acima do nível do mar).} A relação entre a montanha e sua raiz na crosta.
+
+
+É possíve usar o método apenas para a anomalia de ar livre, e o resultado para uma grande montanha por exemplo é um pequeno valor negativo. Isso acontece pois, quanto mais alta a montanha, mais massa ela tem, e mais profunda ela está na subsuperfície, deslocando a Moho para baixo. Pela Moho estar muito proifunda e com menor densidade (montanha granítica) em relação ao resto da crosta e parte do manto em volta, ela tem menor contribuição gravitacional quando comparado ao gravimetro no alt da montanha que tem grande massa; por isso, há esse resultado positivo pequeno para o coeficiente angular, pois há uma 'disputa' entre a crosta e a topografia, e a topografia por ser muito alta vence por pouco. 
+
+Considerando a Anomalia Bouguer, que descarta o efeito topográfico, o coeficiente angular será negativo e consideravelmente grande, devido à grande massa daquele corpo rochoso de baixa densidade na crosta, e que uma grande montanha poussui també uma grande 'raiz' submersa.
+
+É importante falar sobre a 'Topografia não compensada de banda espectral superior'; Feições grandes geram sinais suaves e de baixa frequência, o que quer dizer que podem ser tão massivos que suas enormes topografias se compensam na crosta, abaixando Moho pela isostasia, o que gera esse modelo suave de baixa frequência. Já corpos isolados, que são pontuais e quebram um padrão, como por exmeplo um pequeno morro não grande o suficiente para 'flexionar' a crosta ou um vale pontual, são considerados 'ruídos', componentes de alta frequência (banda espectral superior). Essa topografia não é compensada pois não tem magnitude suficiente para gerar uma resposta crustal, então seu efeito não é compensado abaixo do nível do mar; aliado à isso, a anomalia de ar livre considera também essas componentes de alta frequência, o que contribui para o pequeno valor positivo do slope quando usado a regressão apenas nesse caso de anomalia de ar livre. 
+    
+
+
+\textbf{Densidade lateral}: Mudança de densidade na horizontal, como de uma bacia para uma intrusão. 
+
+É necessário analisar as mudanças de densidade lateral, a flexura da crosta (que é outro parâmetro relevante) e o tratamento dos dados de topografia antes da regressão (tipo de filtro a ser usado e etc). 
+
+
+\section{Teoria}
+
+\subsection{Isostasia de Airy}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{crustal-model-simple.png}
+    \caption{Modelo simples de crosta utilizado no artigo}
+    \label{fig:placeholder}
+\end{figure}
+
+
+O artigo primeiro calcula os efeito sgravitacionais da figura 1. ELe utiliza a Expansão de Parker, uma ferramenta matemática para calcular o campo potencial gerado por uma camada de material com interface irregular e ondulada. Ele trabalha com o mapa da topografia no domínio da frequência utilizando uma Transformada de Fourier para isso (por isso a notação H(k) ao longo do artigo. A série tem infinitos termos mas Pivetta e Braitenberg nesse caso usam apenas o primeiro termo e mais importante da série, para calcular o efeito do modelo da figura. 
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{eqs1.png}
+    \caption{Calculando modelo simples crustal}
+    \label{fig:placeholder}
+\end{figure}
+
+
+A figura mostra as aproximações dos efeitos aproximados, onde $\delta g_t(k)$ é o campo gravitacional da topografia no dompinio da frequência, H(k) é a topografia no domínio da frequência e $e^{-kz_1}$ é um termo de filtro e decaimento, onde $z_1$ é a altura de medições da gravidade (como um satélite) em relação ao nível do mar. Já $\delta g_c(k)$ é o campo gravitacional da copensação isostática (a raiz, a parte crustal), $\Delta \rho$ é o contraste de densidade entre o manto e a crosta, W(k) a forma da ondulação de Moho (transformada do limite de Moho de Airy) e $e^{-k(z_1 + z_2})$ termo de decaimento com $z_2$ sendo a profundidade da Moho. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{eqs2.png}
+    \caption{Calculando modelo simples crustal}
+    \label{fig:placeholder}
+\end{figure}
+
+A soma das equações 1 e 2 das figuras resulta na equação 3 das figuras. Ela diz a forma W(k) da raiz na Moho de acordo com a forma da topografia H(k). 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{isostasy_model.png}
+    \caption{Exemplo de como a relação de formas funciona e no que ela resulta quando feita a Transformada Inversa de Fourier.}
+    \label{fig:placeholder}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{eqs3.png}
+    \caption{Calculando modelos simples crustal}
+    \label{fig:placeholder}
+\end{figure}
+
+
+Usando a relação obtida de (3), foi substituído nas outras equações e obteve-se as equações (4) e (5). (4) é a anomalia de ar livre, calculada como uma subtração dos efeitos topográficos e crustais, como esperado. A equação 5 é a anomalia Bouguer; que por definição é a anomalia de ar livre subtraída pela anomalia da topografia. 
+
+A equação 5 mostra a relação linear entre a Anomalia Bouguer (y) e a topografia (x), com o termo $-2\pi G \rho_C e^{-k(z_1 + z_2)}$ sendo o coeficiente angular 'a'. Vale notar que a dependência inclui um filtro, a exponencial, que funciona como um filtro passa baixa; por ser exponencial negativa, valores grandes de  (frequência espacial) irão fazer o termo tender para zero. 
+
+
+A admitância no contexto do arquivo é o próprio slope, obtido pela divisão da anomalia Bouguer pelo H(k). 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{admitancias.png}
+    \caption{a) Admittance curves between Free air anomaly (solid line), Bouguer fields (stippled line) and topography for Airy isostasy. b) Regression between Bouguer
+and raw/filtered topography; raw topography has single spectral component with 500 km or 1000 km wavelength (respectively red and black crosses); red and black
+dots report the regression with appropriately filtered topographies. c) Free air (solid lines) and Bouguer (stippled lines) admittances for Airy (black) and flexural (red)
+cases. d) Regression between Bouguer and filtered topography for Airy (black) and flexure (red). Blue line regression with crustal model with infinite flexural rigidity.
+e) Free air and Bouguer admittance curves (respectively solid and stippled lines) for a crustal model with dense topography (red lines). Admittances for reference
+crust reported with black lines. f) Regression between Bouguer and topography for reference and dense crustal models. In this case the topography has 50 km
+wavelength. (For interpretation of the references to color in this figure legend, the reader is referred to the web version of this article.}
+    \label{fig:placeholder}
+\end{figure}
+
+
+Com base na figura, primeiro olhamos para (a). Para frequências mais altas, ou seja, 'montanhas' maiores e largas. a admitância da anomalia de ar livre é 0. No entanto, para a Anomalia Bouguer, ela é explicitamente negativa, como Airy prevê, e possui maior correlação e utilizade. 
+
+
+Para (b), é mostrado o plot com cruzes e pontos, vermelhos e pretos. Os vermelhos correspondem a uma região com 500km de comprimento de onda (maior frequência), os pretos de 1000km (menor frequência). As cruzes são dados brutos, sem o filtro passa baixas, e os pontos são dados com filtros. AMbos vermelho e preto têm mesma composição física de densidades. No entanto, para o dado bruto, observa-se evidentes diferenças nas inclinações (slopes) das retas, enquanot que pro dado filtrado eles são bem parecidos, e estão mais próximos do valor real. Isso ilustra a importância do pré-processamento correto que enolve a filtragem dos dados e a eficácia do método, fazendo o tamanho da montanha não ser tão relevante, e sim o sinal isostático. 
+
+Para (c) e (d) mostram linhas tracejadas como anomalia bouguer e linhas continuas como anomalia de ar livre. O vermelho é um modelo de crosta rígida e o preto um modelo normal. Por eles, nota-se que o modelo de corsta rígida enfraquece a relação entre topografia e anomalia Bouguer, com a linha vermeha ficando mais próxima de zero e a linha preta ficando mais negativa em relação a vermelha. 
+
+Para (e), temos o vermelho como um modelo de rochas densas e preto o modelo padrão esperado. Para maiores densidades, em (e), mostra-se um crescimento que passa do 0 em frequencias intermediárias, ao contrário do preto que vai direto para zero. Isso mostra que o slope fica positivo nessa região. (f) comprova isso; plotando a anomalia Bouguer com relação a topografia, vemos uma inclinação positiva dessa região com maior densidade. 
+
+
+\subsection{Efeitos flexurais}
+
+Para longos comprimentos de onda (baixas frequências) a rigidez da placa não é suficiente para sustentar aquele grande peso em cima, e a Moho fica mais profunda para compensar. Para curtos comprimentos de onda (altas frequências) a rigidez da placa já é suficiente para sustentar aquela massa pontual.  A resposta flexural À um peso é descrita por 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{flexura.png}
+    \caption{Resposta flexural}
+    \label{fig:placeholder}
+\end{figure}
+
+onde D é a rigidez flexural, considerando também a gravidade e o contraste de densidade. 
+
+
+Fazendo a substituição da mesma forma feita anteriormente, nas equações (4) e (5) das imagens, obtemos agora essa relação para uma crosta rigida:
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{eqs-rigidez-flexurais.png}
+    \caption{Equações agora considerando rigidez}
+    \label{fig:placeholder}
+\end{figure}
+
+Na análise da imagem fiz a maioria das análises relevantes aqui. Em resumo, a rigidez influencia no slope, e quanto mais rigido, mais o slope vai para zero. 
+
+
+
+\subsection{Densidades não homogêneas}
+
+
+Agora o caso de uma massa com densidade diferente da padrão esperada.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{eqs-densidade-inhomogenea.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
+
+As equações (10) e (11) da imagem mostram o resultado para a anomalia de ar livre para esse modelo de densidade, e a Anomalia Bpguer após correção na de ar livre. 
+
+O primeiro termo de 11 se refere ao sinal raso, oriundo do erro cometido da correção Bouguer da 'montanha', da parte acima do modelo padrão esperado, é um resíduo que existe pois usamos o modelo padrão e n]ao a densidade real, que é anômala.  Sabemos que a Correção Bouguer é a correção que considera um valor de referência, que não é o certo para uma rocha com densidade não-homogênea.  Dessa forma, vai sobrar um termo de resíduo que é o primeiro termo da equação. O segundo termo é o termo da raiz profunda, que tem de fato a contribuição naquele ponto. As exponenciais agem como um filtro e geram o sinal positivo. O contraste de densidade nesse exemplo geraum resultado positivo que faz a subtração ser positiva. Se fosse cootraste negativo, a anomalia seria negativa. 
+
+
+No artigo, com o slope da figura f ela estimou o contraste de densidade de $120 kg/m³$, próximo ao valor real de $150 kg/m^3$. É próximo mas ainda é diferente, e a autora diz que é pela não compensação da Moho. A equação diz que sua contribuição (segundo termo) é de fato negativa e mesmo que seu sinal seja fraco (basta ver a exponencial que leva para baixo) ele aidna assim influencia no resultado final. Os autores provam isso calculando o valor do contraste para uma crosta initamente rígida (sem raiz na Moho, como se a crosta nao flexionasse e sim fosse plana) o contraste é extamente $150 kg/m³$.
+
+
+
+Agora, os autores falam sobre até o momento só terem feito a análise considerando um corpo inteiro na crosta com a mesma densidade. Mas isso não se palica na vida real; há corpos, como regiões vulcânicas, com diferentes densidades em suas proximidades, como o contraste entre o núcleo de um vulcão e as rochas ao redor. Nesse sentido, a regressão separa dois tipos de sinais diferentes, ela filtra deixando passar os sinais com longos comprimentos de onda (baixa frequência, efeitos isostáticos) e impede os sinais de curto comprimento de onda (alta frequÊncia, efeitos geológicos), permitindo uma análise separada dos dois fenômenos. 
+
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{corpos-inomogeneos.png}
+    \caption{a) Regression between Bouguer and filtered topography. Bouguer field includes the effect of the isostatic compensation and of a crustal inhomogeneity
+uncorrelated with the topography. b) Residual map along a profile crossing the crustal inhomogeneity. c) Model of a synthetic sedimentary basin. Black line reports
+the upwelling topography; blue flat topography; red basin with topographic depression. Dashed line: sediment basement. d) Scatter plot of Bouguer and topography
+for a sedimentary basin. Red, blue and black coded as in Fig. 3c. (For interpretation of the references to color in this figure legend, the reader is referred to the web
+version of this article.}
+    \label{fig:placeholder}
+\end{figure}
+
+
+
+Agora, o artigo cria um modelo com corpo isostático e geológico. 
+
+
+Uma montanha muito larga (250 km de comprimento de onda) e alta (2000 m) . Sendo tão grande, ela é "isostática", ou seja, é compensada por uma raiz profunda na Moho, seguindo um modelo de flexura (crosta rígida, Te = 40 km) . Este é um sinal de longo comprimento de onda.
+
+Uma anomalia de densidade pequena e localizada . É um corpo esférico de rocha densa (+300 kg/m³) com apenas 4 km de raio, localizado logo abaixo da superfície (2 km de profundidade) . Por ser pequeno, ele é sustentado pela rigidez da crosta e não cria sua própria raiz isostática . Este é um sinal de curto comprimento de onda.
+
+
+O sinal observado será uma linha suave comm um grande pico sobre o corpo anômalo. A regressão não considera esse pico, observável na figura a da última figura. mesmo com o pico ali, a regressão ficou bem ajustada nos pontos isostáticos de lonco comprimento de onda. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{residuo.png}
+    \caption{Resíduo obtido pela subtração do Bouguer observado subtraído dos valores da regressão linear.}
+    \label{fig:placeholder}
+\end{figure}
+
+a figura b mostra os resíduos próximo à zero, exceto na região do corpo anômalo de alyta frequência. 
+
+
+Bacias sedimentares podem ser um problema. Elas geralmente é uma depressão na crosta que foi preenchida com sedimentos, produzindo rochas menos densas e mais leves. Por causa dessa condição, a anomalia Bouguer gerada é muito negativa por conta dessa caracterísitca; e essa anomalia não é explicaa por uma topografia, pois o relevo topográfico da bacia é moderado ou plano. Ess agrande anomalia não está relacionada à uma grande topografia, que por sua vez cria uma grande raiz; e isso quebra o método. 
+
+
+
+A figura 3c mostra algumas possíveis topografias de bacias e suas correespondentes regressões. 
+
+
+Depressão Topográfica (Linha Vermelha):a bacia é mais funda (eixo Y mais negativo), a topografia de superfície também é uma depressão (eixo X é negativo). O gráfico plota pontos no quadrante inferior esquerdo (X negativo, Y negativo). A linha reta que melhor se ajusta a isso é uma linha com slope positivo. É isso que o texto quer dizer com "correlação positiva".
+
+
+
+Topografia Plana (Linha Azul): A bacia inteira está coberta por uma planície perfeitamente plana.O eixo X (topografia) é sempre zero. No entanto, o eixo Y (gravidade) ainda varia, sendo muito negativo. Se você plotar um monte de pontos onde X=0, você obtém uma linha vertical no gráfico. É isso que o texto chama de "assíntota vertical". O slope (inclinação) de uma linha vertical é infinito.
+
+
+Elevação Topográfica (Linha Preta): A bacia está soterrada sob um leve relevo positivo (eixo X positivo), mas a gravidade ainda é muito negativa (eixo Y negativo).O gráfico plota pontos no quadrante inferior direito (X positivo, Y negativo). A linha reta que se ajusta a isso tem um slope negativo muito íngreme.
+
+
+
+Os autores atentam a avisar que enxergar valores tão altos produzidos por bacias é um indicativo de não estar analisando um sinal isostático mas sim geológico, como as bacias sedimentares.
+
+
+\subsection{Modelo de Pratt}
+
+
+Outro grande modelo de isostasia que funciona principalmente para os oceanos. A crosta continental pode ter uma espessura variávelk que se compensa numa raiz profunda na Moho. A crosta oceânica tem espessura aproximadamente constante, 10km, em toda sua composição. Seu modelo de equilíbrio isostático é diferente. Uma dorsal, por exemplo, não tem raiz profunda, e se equilibra de outra forma.
+
+O modelo de Pratt de densidade variáel leva em consideração as diferenças de densidade lateral na prórpia crosta oceânica, devido ao fluxo térmico na Terra. Sob uma dorsal oceânica, que é mais rasa, há ascenção de magma (quente) que faz as rochas ali serem menos densas devido à temperatura, e essa expansão faz a rocha 'subir para cima'. Longe da dorsal, cmo numa planície abissal, a temperatura é mais fria, logo, a rocha é mais densa e o fundo do mar é maior. A espessura que varia é a do manto superior que faz parte da litosfera, e a da crosta pode-se considerar constante. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{eqs-pratt.png}
+    \caption{Equações de Pratt.}
+    \label{fig:placeholder}
+\end{figure}
+
+Onda $t_c$ é a espessura constante da crosta oceânica  e $d$ é a profundidade de compensação., uma profunidade no manto onde as duas colunas de rocha possuem a mesma massa nessa profundidade. Assumindo a crosta oceânica com espessura cnstante, o que muda é o limite da Moho. A profundadedde compensação geralmente fica consideravelmente abaixo da Moho. 
+
+
+
+Em Airy, quando a topografia sobe, a Moho desce pra compensar. Na crosta oceânica, não há compensação para equilíbrio de forças; se a crosta sobe, a Moho sobe junto; se desce, a Mohp desce junto. A compensação se dá em profundidades maiores, com as variações térmicas e de densidade. As mudanças são no manto, e não na crosta, que é constante sua espessura. 
+
+
+Devido à diferença das compensações em Airy e Pratt, as profundidades diferentes, os slopes podem variar dependendo do comprimento de onda quando comparamos a regressão no continente e no oceano. 
+
+Quando efetivada a regressão, o slope na crosta continental (com compensação rasa) tem um slope negativo muito mais forte em comparaçao da regressão no ooceano, que tem um slope negativo fraco devido à sua compensação profunda que ger aum sinal mais fraco. Essa grande profundidade também prejufica na qualidade do sinal e sua correlação com a topografia do fundo do mar, ficando menos fiel por conta da distância profunda, o que reuslta num ajuste de menor qualidade. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{pratt-images.png}
+    \caption{a) Admittance curves between Free air anomaly (solid line), Bouguer
+fields (stippled line) and topography for Airy model (black) and Pratt model
+(red). b) Bouguer fields calculated for the Pratt model (red line) and Airy model
+(black line) c) Regression between Bouguer and filtered topography; red and
+black dots are relative to Pratt and Airy models respectively. (For interpretation
+of the references to color in this figure legend, the reader is referred to the web
+version of this article.}
+    \label{fig:placeholder}
+\end{figure}
+
+Observar essas curvas que mostram amenor qualidade do ajuste. 
+
+
+
+\subsection{O intercepto da linha de regressão}
+
+Aqui há o estudo do termo de intercepto da equação da reta. A teoria dos modelos isostáticas diz que a Anomalia Bouguer está ligada à topografia; logo, no caso ideal, quando a topografia fosse 0m, o termo de interceptoi também seria 0. 
+
+
+No caso real, é muito difícil o intercepto ser 0 por motivos geológicos. No manto, a presença de uma pluma quente de magma ou uma placa fria em sua composição pode influenciar em um sinal de longo comprimento de onda, que aparecrá no termo de intercepto do ajuste, influenciando e sendo algo que foge do caso ideal. Além disso, as bacias sedimentares também podem causas efeitos no temro de intercepto, e já que devido À geologia da bacia o sinal fica muito negativo, o intercepto também fica. Também, planícies abissais por serem muito planas também criam diferentes interceptos geralmente positivos pois a Correção Bouguer adiciona rocha onde não havia rocha, jogando o intercepto para cima. Por fim, isso também pode ocorrer por conta da natureza não perfeitamente linear da gravidade que pode causar desvios no ajuste que aparecem no temro de intercepto. 
+
+
+\subsection{Mapa de resíduos}
+
+A vantagem do método é eseparar os efeitos isostáticos dos efeitos pontuais geológicos, e todos os dados fora da linha da regressão é um artefato geológico. No entanto, a gravidade tem natureza um pouco não-linear e isso pode ser visível principalmente em topografias muito íngrimes como montanhas ou bordas continentais. A imagem dessa parte mostra que os resíduos (dados reais - regressão) são mais significativos para relevos íngrimes, mas esses resíduos são pequenos, abaixo de $10\%$ para relevos íngrimes e $2\%$ para relevos suaves, uma porcentagem baixa, o que mostra a eficácia do método mesmo com essas limitações.
+
+
+
+\subsection{Discussão dos dados sintéticos}
+
+Aqui está um resumo em prosa do trecho fornecido:
+
+A análise de regressão é uma ferramenta apta para estudar o estado isostático da crosta e para separar o sinal isostático da contribuição geológica superficial . Esta regressão deve ser realizada entre o campo Bouguer e uma topografia adequadamente filtrada . A necessidade dessa filtragem se deve ao decaimento do sinal de gravidade com a altura da observação .
+
+Para uma resposta puramente isostática, é esperada uma linha de regressão com slope (coeficiente angular) negativo . Variações nesse coeficiente podem ser causadas por diferentes mecanismos de compensação ou pela presença de variações sistemáticas de densidade na crosta . Especificamente, tanto um aumento na rigidez da crosta quanto a presença de uma topografia superficial densa podem produzir linhas de regressão "menos íngremes" (um slope negativo mais fraco) . Devido a essa ambiguidade, ou "viés", uma interpretação quantitativa das variações do slope em termos de densidade crustal torna-se complicada se não houver outras restrições geofísicas ou geológicas .
+
+Existem casos em que o método se comporta de maneira diferente. Uma correlação positiva entre o Bouguer e a topografia é esperada em altas frequências espaciais, sobre áreas onde afloram formações rochosas densas . Além disso, grandes bacias sedimentares com topografia plana são regiões onde os coeficientes de regressão e os residuais devem ser tratados com cautela, pois são geralmente caracterizados por slopes com valores muito altos que não refletem a isostasia .
+
+Para a regressão em áreas oceânicas, também se espera uma anti-correlação (slope negativo) entre o Bouguer e a topografia filtrada . Nesses casos, a profundidade de compensação pode influenciar o valor do slope . Assumindo uma profundidade de compensação típica de 120 km (como no modelo Pratt), deve-se observar linhas de regressão ligeiramente menos íngremes sobre os oceanos em comparação com áreas continentais .
+
+Finalmente, variações no intercepto da regressão (o valor da anomalia em topografia zero) podem ser explicadas por anomalias de densidade de longo período no manto, que deslocam sistematicamente as anomalias . No entanto, interceptos diferentes de zero também podem ser causados por efeitos não lineares (a leve curvatura da física real) que não são considerados pela simples aproximação da regressão linear.
+
+
+
+
+\section{Aplicação da análise de regressão na região do Atlântico Central}
+
+
+
+
+Os dados utilizados são oriundos de dados de expansão em esfericos harmônicos, que são a solução da equação de Laplace que rege os métodos potenciais, e não são em mapas. Com o software 'GrafLab' eles calcularam os harmônicos esféricos em pontos específicos. A resolução (tamanho de cada pixel do mapa) é de 0.1° com a altura de 10km (como se medisse ab gravidade 10km acima do elipsoide). O grau de detalhamento foi 720 (o número de ordens dos harmônicos esféricos) sendo possível detectar feições de até 30-40km de comprimento de onda. As correções de Bouguer não foram feitas manualmente, e sim foi utilizado modelos já existente, como o EIGEN-6c4 para o distúrbio da gravidade (free-air anomaly) e o Earth-2014 que contém o efeito gravitacional da topografia; sendo assim, a ANomalia Bouguer foi obtida pela subtração desses dois. 
+
+
+O modelo com 720 coefieicnetes de harmônicos é muito detalhado e pode contar com muitas feiçoes de curto comprimento de onda que atrapalham a regressão. Dessa forma, antes da regressão, foi aplicado um filtro passa-baixas chamado de 'filtro Terra', o mesmo das equações teóricas, com $z_2 = 40km$, o que significa que o efeito é suavizado da mesma forma que uma fonte gravitacional a 40km de profunidade é suavizada. Mesmo que na teoria apareça esse filto naturalmente no dompinio da frequÊncia, na prática e abordagem do artigo ele teve de ser aplicado manualmente. 
+
+
+
+Na imagem 7, é mencionado o 'erro' e o 'resíduo', que são coisas diferentes. O 'erro' mede o quão confiável está seu ajuste, com base na distribuição dos pontos ao redor da linha de regressão em regiões mais estáveis como o oceano ele vai ser menor, e em coontinentes vai ser maior. O resíduo é a substração dos valores da regressão pelos valores dos pontos. 
+
+
+O método aplica a regressão em janelas. As janelas de 7° se mostraram muito suaves, removendo feições importantes. As de 2° mostraram muitos detalhes que fazia muitos ruídos que ateapalavam a regressão. A janela de 3° foi a ideal. 
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{regressao-central-atlantico.png}
+    \caption{a) Spatial distribution of the slopes regression lines. Outlines of selected geologic units are reported with thick colored lines. Plate boundaries are plotted with
+the thin red line. Outline of the (Large Igneous Provinces) LIPs for Walvis Ridge (WR), Rio Grande Rise (RGR) and Cape Verde (CV) are reported with grey lines. b)
+Map of the error on the linear regression coefficient; map reports the traces of the profiles discussed in the text. c) Map of the intercept of the regression line; red line
+marks the plate boundaries. d) Residuals map; plate boundaries reported with the black line; location of selected LIPs are reported with arrows. The displayed grids
+are available in the Research Data associated to the publication. (For interpretation of the references to color in this figure legend, the reader is referred to the web
+version of this article.)}
+    \label{fig:placeholder}
+\end{figure}
+
+
+
+Os oceanos mostram slopes mais estáveis e uniformes, com erros baixos e altos interceptos. Pratt já previa isso. Nos continentes, os slopes variam nbem mais e possuem erros maiores. Isso já é esperado, devido à natureza heterogênea da crosta continental. 
+
+
+Na bacia do Amazonas (linha branca) o slope é negativo e íngrime, esperado para uma bacia. No escudo das guianas, onde a crosta é mais rígida, o slope é quase zero, esperado para o modelo de corsta rígida. Para a bacia do Solimões, o slope foi ligeiramente positivo; isso era previsto, o valor foi positivo pois bacias podem ser muita planas ou depressões, e pode haver uma operação com dois sinais negativos que geram um sinal positivo grande, o que explica esse slope, uma característica de bacias. 
+
+
+Os contornos com as bacias e ambientes geológicos foram providnenciados usando dados do USGS (United States geological survey, serviço geológico dos EUA). 
+
+
+Os Andes são muito estáveis com slopes aproximadamente constantes. Isso é esperado para uma região que não possui rigidez alta da crosta e que há um aparente efeito isostático que produz raízes profundas para sustentação d eequilíbrio. 
+
+Na região de subducção, como na borda do Chile, há uma região com slope positivo, que se dá por conta do efeito de dobramento da placa de Nazca que está afundando, e esse dobramento causa uma anomalia positiva naquela região, e o artigo chama esse fenômeno de bulge. Aliado à isso, o acúmulo de sedimentos na fossa causa uma anomalia negativa, por conta de suas baixas densidades, formando assim 'anomalias dipolares'. 
+
+
+Na dorsal, era esperado um valor menor do slope em comparação ao valor obtido no artigo, que contradiz o modelo de Pratt. Mas isso se explica pelo grande comprimenot de onda da dorsal, onde nessa faixa de frequência os valores de slope para Airy e Pratt ficam parecidos mesmo sendo modelos diferentes, 
+
+Os resíduos podem fazer aparecer visíveis algumas feições, como a Elevação do Rio Grande que pode ser enxergada pelos resíduos. 
+
+
+
+Fazendo cortes no atlantico indo da AMérica do Sul até a África, observou-se que o slope é estável e plano no meio do oceano, e ao se aproximar da borda do continente fica negativo, e no continente ficca positivo. Essas mudanças cheghando no continente se devem àgeologia local complexxa que a regressão isostática não consegue explicar certamente.
+
+O intercepto no oceano imita o slope no sentido que se mantém constante, mas ao chegar nas bordas fica maisn variável devido à natureza heteorgenea dessa região. 
+
+Os resíduos no oceano são próximos à zero, o que mostra a eficiÊcnia do método nessa região. Já nas bordas e no conitnente ele varia e forma anomalias dipolares que não explicam o efeito gravitacional, devido À geologia mais complexa da região.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{perfis.png}
+    \caption{Profile CD: a) Profile of the topography (blue) and the gravity residuals
+after the regression analysis (black). b) Slopes of the regression lines along the
+profiles. Solid line: observed; dashed line: modelled. c) Intercept of the re-
+gression lines along the profiles. Solid line: observed; dashed line: modelled. d)
+Density model along the profile, color code reports the density. Blue: sea with
+density 1020 kg/m 3
+; green-dark brown: sediments with densities from 1600 kg/
+m 3 up to 2600 kg/m 3
+; ocra to brown: crust from 2600 kg/m 3 to 3000 kg/m 3
+;
+red: mantle with densities ranging from 3190 kg/m3 up to 3300 kg/m 3
+. (For
+interpretation of the references to color in this figure legend, the reader is re-
+ferred to the web version of this article.}
+    \label{fig:placeholder}
+\end{figure}
+
+
+\section{Aplicação em Marte}
+
+
+Para testar a universalidade do método, os autores o aplicaram aos dados globais de topografia (do instrumento MOLA) e gravidade (do modelo GMM-1025a) do planeta Marte . O objetivo era verificar se a análise de regressão do slope (coeficiente angular) e do intercepto poderia, assim como na Terra, identificar as principais estruturas geológicas e discriminar áreas com diferentes densidades crustais ou mecanismos de suporte isostático .
+
+A principal descoberta ocorreu na Província de Tharsis, a vasta região vulcânica de Marte conhecida por abrigar os maiores vulcões do sistema solar . Esta área, que estudos anteriores já identificavam como tendo uma crosta extremamente rígida (com alta espessura elástica, Te, de até 150 km) , apresentou nos resultados da regressão um slope "menos negativo". Este resultado foi uma validação crucial da teoria: ele confirmou o que os modelos sintéticos (como o da Figura 2d ) previam, ou seja, que uma crosta rígida (flexural) sustenta mecanicamente o peso da topografia e, por não criar uma raiz isostática profunda, produz um slope de regressão mais fraco (menos negativo) .
+
+Além de identificar a rigidez de Tharsis, o método também se mostrou eficaz em outras áreas. Ele conseguiu diferenciar as Terras Baixas do Norte, que apresentaram "maior variabilidade" nos parâmetros de regressão, das Terras Altas do Sul, que se mostraram "majoritariamente negativas e coerentes" . Da mesma forma, a análise foi sensível o suficiente para distinguir as diferentes partes da bacia de impacto Hellas, separando seu anel marginal da bacia interna .
+
+Foi aplicado técnicas de machine learning (aprendizado de máquina), especificamente uma análise de cluster (agrupamento), aos mapas de slope e intercepto de Marte . O objetivo era testar se um algoritmo poderia usar essas "assinaturas" de regressão para classificar e mapear automaticamente as diferentes províncias geológicas do planeta .
+
+Para isso, os autores buscaram definir uma classe principal que representasse a "estrutura crustal marciana padrão" ou "não perturbada" . Eles testaram a robustez do método de duas formas: primeiro, definindo a classe manualmente, selecionando uma "área de treinamento" que parecia geologicamente homogênea; segundo, definindo a classe de forma estatística, analisando a distribuição de valores de slope e intercepto mais comuns em todo o planeta . Notavelmente, ambas as abordagens produziram resultados muito similares, provando que a classificação era robusta . O resultado final, visível na Figura 12d, é um mapa de Marte que destaca todas as áreas (em verde) que se encaixam nessa "assinatura padrão", permitindo assim isolar e identificar automaticamente as regiões geologicamente anômalas (como Tharsis e Hellas) que não se encaixam nesse padrão .
+
+Apesar dos sucessos, os autores apontam limitações importantes. A principal é que, embora o método seja excelente para mapear qualitativamente as estruturas, ele "dificilmente poderia oferecer estimativas quantitativas" da rigidez da crosta (o valor de "Te") . Isso ocorre porque o slope é "enviesado" (biased), ou seja, ele é sensível a dois fatores ao mesmo tempo: a rigidez (flexura) e as variações de densidade na crosta. Sem dados adicionais, é difícil saber qual dos dois está causando a mudança no slope em uma determinada área . Além disso, a análise de regressão não foi bem definida na região polar norte do planeta .
+
+A conclusão é que a regressão se mostrou uma ferramenta poderosa e rápida para uma análise preliminar da estrutura de um planeta . Tendo seu potencial demonstrado na Terra e em Marte, os autores sugerem que a análise pode ser "analogamente expandida para outros planetas e corpos celestes"
+
+
+\section{Discussão}
+
+A análise de regressão demonstra ser uma ferramenta útil para o estudo da estrutura litosférica e para a separação dos diferentes sinais que compõem o campo de gravidade . Quando aplicada em "janelas deslizantes", a regressão permite capturar variações espaciais na resposta mecânica da litosfera . O mapa de resíduos resultante é considerado um mapa de anomalias isostáticas, no qual os sinais restantes se devem a variações de densidade na crosta não previstas pelo modelo principal, o chamado "efeito geológico" .
+
+Os mapas dos coeficientes de regressão, especialmente o mapa de slope (coeficiente angular), contêm informações relevantes sobre o estado isostático e são capazes de diferenciar grandes estruturas geológicas . Na área de estudo (Atlântico, África e América do Sul), observou-se que os valores do slope estão amplamente correlacionados com a espessura elástica da litosfera (Te) . Regiões com baixo Te (crosta fraca) apresentam slopes próximos ao gradiente teórico de Bouguer, enquanto crostas rígidas (alto Te) são caracterizadas por slopes "menos íngremes" (um negativo mais fraco) . Em ambientes continentais heterogêneos, o slope demonstra capacidade de delimitar províncias geológicas distintas, como bacias sedimentares e crátons . A análise também se mostrou viável em Marte, identificando estruturas proeminentes como a região de Tharsis e a bacia de Hellas .
+
+Contudo, adverte-se sobre a importância da metodologia. O tamanho da janela de análise é um parâmetro crucial, pois janelas muito pequenas podem "erodir" o sinal geológico de interesse (como o de grandes bacias), misturando-o ao sinal isostático .
+
+A principal limitação do método reside na sua dificuldade em fornecer "estimativas quantitativas" da espessura elástica (Te) . Isso ocorre porque o slope é "enviesado" (biased), apresentando sensibilidade simultânea tanto à rigidez da crosta (flexura) quanto às variações de densidade. Na ausência de outros dados geofísicos, torna-se complexo determinar qual desses dois fatores está causando a variação observada no slope .
+
+
+\section{Conclusão}
+
+Dada a sua simplicidade e rápida implementação, o método de regressão demonstra ser uma ferramenta poderosa para uma análise expedita de campos de gravidade globais, permitindo uma interpretação preliminar de estruturas de grande escala, tanto na Terra quanto em outros corpos celestes .
+
+Este método pertence ao campo das técnicas de Aprendizado de Máquina (Machine Learning), e os seus parâmetros de regressão (como o slope e o intercepto) podem ser integrados com outras variáveis observadas, tais como mapas de fluxo térmico, susceptibilidade magnética ou velocidade de ondas sísmicas . O estudo demonstrou o potencial destes parâmetros para distinguir diferentes tipos de terrenos na Terra e em Marte, sugerindo que a análise pode ser analogamente expandida para outros planetas e corpos celestes .
+
+No caso específico da crosta oceânica do Atlântico, foi verificado que os parâmetros de regressão se agrupam (cluster) de forma a permitir a distinção clara entre a crosta oceânica central e as margens continentais passivas . Conclui-se, assim, que esta análise pode ser igualmente estendida a outras bacias oceânicas e a outros domínios tectônicos, para investigar casos específicos como zonas de subducção, zonas de fratura e domínios vulcânicos oceânicos.
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
